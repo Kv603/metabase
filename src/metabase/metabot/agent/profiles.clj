@@ -250,6 +250,19 @@
                     #'tools/document-construct-sql-chart-tool]})
 
 (register-profile!
+ {:name            :anomaly-analytics
+  :prompt-template "anomaly-analytics.selmer"
+  :max-iterations  8
+  :temperature     0.1
+  :skills?         false
+  :tools           [#'tools/search-tool
+                    #'tools/read-resource-tool
+                    #'tools/construct-notebook-query-tool
+                    #'tools/run-query-tool
+                    #'tools/create-chart-tool
+                    #'tools/static-viz-tool]})
+
+(register-profile!
  {:name            :slackbot
   :prompt-template "slackbot.selmer"
   :max-iterations  15

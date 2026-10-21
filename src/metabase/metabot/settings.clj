@@ -25,6 +25,20 @@
   :encryption :no
   :export?    false)
 
+(defsetting anomaly-analytics-only
+  (deferred-tru "Force native Metabot requests to use the read-only anomaly analytics profile.")
+  :type :boolean
+  :default false
+  :visibility :admin
+  :export? false)
+
+(defsetting anomaly-analytics-database-ids
+  (deferred-tru "Database IDs permitted for anomaly analytics. Empty disables analytics chat and rendering.")
+  :type :json
+  :default []
+  :visibility :admin
+  :export? false)
+
 (defsetting metabot-enabled?
   (deferred-tru "Whether Metabot is enabled for regular usage.")
   :type       :boolean

@@ -436,6 +436,11 @@
   [database-name :- :string]
   (t2/select-pks-vec :model/Database :name database-name))
 
+(mu/defn all-database-ids
+  "Every configured source database ID, including sources invisible to the current user. Used only to enforce instance isolation."
+  []
+  (t2/select-pks-vec :model/Database))
+
 (mu/defn database-engines-and-names
   "A map of ID to the engine and name of the Databases with `database-ids`."
   [database-ids :- [:sequential ::lib.schema.id/database]]

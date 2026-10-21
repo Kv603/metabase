@@ -15,6 +15,7 @@
    [metabase.metabot.agent.core :as agent]
    [metabase.metabot.agent.memory :as memory]
    [metabase.metabot.agent.profiles :as profiles]
+   [metabase.metabot.api.analytics]
    [metabase.metabot.api.conversations]
    [metabase.metabot.api.document]
    [metabase.metabot.api.metabot]
@@ -315,6 +316,7 @@
         _          (metabot.config/check-metabot-enabled! metabot)
         _          (metabot.usage/check-metabase-managed-free-limit!)
         profile-id (metabot.config/resolve-dynamic-profile-id profile_id (:entity_id metabot))
+        _          (metabot.config/check-anomaly-database-isolation! profile-id)
         ;; reject before `start-turn!` persists anything or the title job calls the LLM. An eval-only profile on an
         ;; instance that doesn't run evals gets the same refusal, so nobody can tell it exists.
         _          (when-not (profiles/profile-available? (keyword profile-id))
@@ -465,7 +467,8 @@
   "`/api/metabot` routes."
   (handlers/routes
    (handlers/route-map-handler
-    {"/metabot"       metabase.metabot.api.metabot/routes
+    {"/analytics"     metabase.metabot.api.analytics/routes
+     "/metabot"       metabase.metabot.api.metabot/routes
      "/conversations" metabase.metabot.api.conversations/routes
      "/permissions"   metabase.metabot.api.permissions/routes
      "/document"      metabase.metabot.api.document/routes

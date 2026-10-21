@@ -4,6 +4,7 @@
    [clojure.core.async :as a]
    [metabase.api.common :as api]
    [metabase.driver.settings :as driver.settings]
+   [metabase.metabot.config :as metabot.config]
    [metabase.query-processor.core :as qp]
    [metabase.query-processor.pipeline :as qp.pipeline]
    [metabase.util :as u]
@@ -72,6 +73,7 @@
    Caps this call's rows at `row-limit` (within the backend's 2000/10000 userland ceilings) and records the run
    under `context`, stopping it as [[execute-page!]] describes for `options`."
   [serialized-query row-limit context {:keys [request-canceled-chan timeout-ms]}]
+  (metabot.config/check-anomaly-query! serialized-query)
   (let [query      (-> (select-keys serialized-query query-passthrough-keys)
                        (assoc :middleware {:js-int-to-string? true})
                        qp/userland-query-with-default-constraints

@@ -16,6 +16,7 @@
    [metabase.metabot.agent.profiles :as profiles]
    [metabase.metabot.agent.streaming :as streaming]
    [metabase.metabot.capabilities :as capabilities]
+   [metabase.metabot.config :as metabot.config]
    [metabase.metabot.context :as metabot.context]
    [metabase.metabot.db :as metabot.db]
    [metabase.metabot.metadata-perms :as metabot.perms]
@@ -160,7 +161,7 @@
 
 (mr/def ::profile-id
   "Profile identifier keyword."
-  [:enum :embedding_next :internal :internal-sql :sql :nlq :document-generate-content :slackbot :explorations])
+  [:enum :embedding_next :internal :internal-sql :sql :nlq :document-generate-content :slackbot :explorations :anomaly-analytics])
 
 (mr/def ::tracking-opts
   "Options for snowplow and prometheus analytics tracking."
@@ -499,6 +500,7 @@
    ;; This profile queries in SQL only.
    :internal-sql              :permission/metabot-sql-generation
    :nlq                       :permission/metabot-nlq
+   :anomaly-analytics         :permission/metabot-nlq
    :document-generate-content :permission/metabot-other-tools
    :explorations              :permission/metabot-nlq})
 
@@ -791,6 +793,7 @@
                              api-scope/unrestricted
                              (scope/user-metabot-perms->scopes perms))]
     (check-metabot-access! profile-id perms)
+    (metabot.config/check-anomaly-database-isolation! profile-id)
     (reify clojure.lang.IReduceInit
       (reduce [_ rf init]
         (with-span :info {:name       :metabot.agent/run-agent-loop
