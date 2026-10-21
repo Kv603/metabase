@@ -36,6 +36,10 @@ ARG VERSION
 
 COPY . .
 
+# Normalize only the container copies; Windows checkouts can supply CRLF scripts.
+RUN sed -i 's/\r$//' bin/build.sh bin/check-clojure-cli.sh \
+    bin/clear-outdated-cpcaches.sh bin/docker/run_metabase.sh
+
 # version is pulled from git, but git doesn't trust the directory due to different owners
 RUN git config --global --add safe.directory /home/node
 
@@ -45,7 +49,8 @@ RUN npm install -g bun
 # install frontend dependencies
 RUN bun install --frozen-lockfile
 
-RUN INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bin/build.sh :version ${VERSION}
+# Source checkouts may store shell scripts as 0644; invoke the build through Bash.
+RUN INTERACTIVE=false CI=true MB_EDITION=$MB_EDITION bash bin/build.sh :version ${VERSION}
 
 # ###################
 # # STAGE 2: runner
@@ -73,7 +78,7 @@ RUN apk add -U bash fontconfig curl font-noto font-noto-arabic font-noto-hebrew 
 
 # add Metabase script and uberjar
 COPY --from=builder /home/node/target/uberjar/metabase.jar /app/
-COPY bin/docker/run_metabase.sh /app/
+COPY --from=builder --chmod=755 /home/node/bin/docker/run_metabase.sh /app/
 
 # expose our default runtime port
 EXPOSE 3000
