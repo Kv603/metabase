@@ -36,6 +36,7 @@
   (deferred-tru "Database IDs permitted for anomaly analytics. Empty disables analytics chat and rendering.")
   :type :json
   :default []
+  :encryption :no
   :visibility :admin
   :export? false)
 
