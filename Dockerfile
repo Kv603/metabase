@@ -2,24 +2,37 @@
 # STAGE 1: builder
 ###################
 
-FROM node:22-bullseye AS builder
+FROM node:22-bookworm AS toolchain
 
-ARG MB_EDITION=oss
-ARG VERSION
+# Use the glibc JDK distribution directly instead of depending on Adoptium's apt repository.
+# Jammy's JDK is compatible with Bookworm; the Alpine JDK requires musl instead.
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:/root/.local/bin:${PATH}"
+COPY --from=eclipse-temurin:25-jdk-jammy /opt/java/openjdk /opt/java/openjdk
 
 WORKDIR /home/node
 
-RUN apt-get update && apt-get upgrade -y && apt-get install wget apt-transport-https gpg curl git -y \
-    && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null \
-    && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
-    && apt-get update \
-    && apt install temurin-25-jdk -y \
-    && curl -O https://download.clojure.org/install/linux-install-1.12.0.1488.sh \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl git fontconfig binutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN java -version && javac -version && node --version
+
+RUN curl -fsSLO --retry 3 https://download.clojure.org/install/linux-install-1.12.0.1488.sh \
     && chmod +x linux-install-1.12.0.1488.sh \
     && ./linux-install-1.12.0.1488.sh \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && rm linux-install-1.12.0.1488.sh
 
-ENV PATH="/root/.local/bin:$PATH"
+RUN curl -fsSL --retry 3 https://astral.sh/uv/install.sh -o /tmp/install-uv.sh \
+    && sh /tmp/install-uv.sh \
+    && rm /tmp/install-uv.sh
+
+RUN clojure -Sdescribe && uv --version
+
+FROM toolchain AS builder
+
+ARG MB_EDITION=oss
+ARG VERSION
 
 COPY . .
 
